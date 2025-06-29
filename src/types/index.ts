@@ -118,3 +118,73 @@ export interface Threat {
   tipo: string;
   probabilidad: number;
 }
+
+// Asset Types
+export interface Asset {
+  _id: string;
+  codigo: string;
+  nombre: string;
+  tipo: string;
+  categoria: string;
+  propietario: string;
+  custodio: string;
+  ubicacion: string;
+  valoracion: {
+    confidencialidad: number;
+    integridad: number;
+    disponibilidad: number;
+    autenticidad: number;
+    trazabilidad: number;
+  };
+  valorEconomico: number;
+  dependencias: Asset[];
+  servicios: string[];
+  fechaCreacion: string;
+  fechaActualizacion: string;
+  criticidad?: number;
+  valoracionPromedio?: number;
+}
+
+export interface CreateAssetRequest {
+  codigo: string;
+  nombre: string;
+  tipo: string;
+  categoria: string;
+  propietario: string;
+  custodio: string;
+  ubicacion: string;
+  valoracion: {
+    confidencialidad: number;
+    integridad: number;
+    disponibilidad: number;
+    autenticidad: number;
+    trazabilidad: number;
+  };
+  valorEconomico: number;
+  dependencias?: string[];
+  servicios?: string[];
+}
+
+export interface AssetFilters {
+  tipo?: string;
+  propietario?: string;
+  categoria?: string;
+  search?: string;
+}
+
+export interface AssetStats {
+  general: {
+    totalActivos: number;
+    valorTotalEconomico: number;
+    criticidadPromedio: number;
+  };
+  porTipo: Array<{
+    _id: string;
+    count: number;
+    valorTotal: number;
+  }>;
+  porCriticidad: Array<{
+    _id: string;
+    count: number;
+  }>;
+}
