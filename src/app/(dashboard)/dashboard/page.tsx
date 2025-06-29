@@ -1,12 +1,14 @@
+// src/app/(dashboard)/page.tsx - TU ARCHIVO EXISTENTE CON FIX DE HIDRATACIÓN
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RefreshCw } from 'lucide-react';
+import Link from 'next/link';
 
-// Importar nuevos componentes con tipos
+// Importar componentes del dashboard
 import { KPICards } from '@/components/dashboard/kpi-cards';
 import { RiskMatrixChart } from '@/components/dashboard/risk-matrix-chart';
 import { TrendChart } from '@/components/dashboard/trend-chart';
@@ -22,6 +24,12 @@ import {
 
 export default function DashboardPage() {
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d'>('30d');
+  const [isMounted, setIsMounted] = useState(false); // ✅ Agregado para hidratación
+
+  // ✅ Marcar como montado en el cliente
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Hooks para datos
   const { data: kpis, isLoading: kpisLoading, refetch: refetchKPIs } = useDashboardKPIs();
@@ -32,6 +40,40 @@ export default function DashboardPage() {
   const handleRefresh = () => {
     refetchKPIs();
   };
+
+  // ✅ No renderizar hasta que esté montado (evita hidratación mismatch)
+  if (!isMounted) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Dashboard Ejecutivo</h1>
+            <p className="text-muted-foreground">
+              Resumen ejecutivo del estado de seguridad de la organización
+            </p>
+          </div>
+          <Button variant="outline" disabled>
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Actualizar
+          </Button>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="h-4 bg-muted animate-pulse rounded w-24" />
+                <div className="h-4 w-4 bg-muted animate-pulse rounded" />
+              </CardHeader>
+              <CardContent>
+                <div className="h-8 bg-muted animate-pulse rounded w-16 mb-2" />
+                <div className="h-3 bg-muted animate-pulse rounded w-32" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -53,7 +95,7 @@ export default function DashboardPage() {
         </Button>
       </div>
 
-      {/* KPI Cards - ✅ Pasar data opcional */}
+      {/* KPI Cards */}
       <KPICards data={kpis} isLoading={kpisLoading} />
 
       {/* Main Content */}
@@ -121,17 +163,21 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Button variant="outline" className="h-20 flex flex-col">
-              <span className="text-sm font-medium">Nuevo Activo</span>
-              <span className="text-xs text-muted-foreground">Registrar activo</span>
+            <Button variant="outline" className="h-20 flex flex-col" asChild>
+              <Link href="/activos/nuevo">
+                <span className="text-sm font-medium">Nuevo Activo</span>
+                <span className="text-xs text-muted-foreground">Registrar activo</span>
+              </Link>
             </Button>
             <Button variant="outline" className="h-20 flex flex-col">
               <span className="text-sm font-medium">Escanear</span>
               <span className="text-xs text-muted-foreground">Buscar vulnerabilidades</span>
             </Button>
-            <Button variant="outline" className="h-20 flex flex-col">
-              <span className="text-sm font-medium">Matriz Riesgos</span>
-              <span className="text-xs text-muted-foreground">Analizar riesgos</span>
+            <Button variant="outline" className="h-20 flex flex-col" asChild>
+              <Link href="/riesgos">
+                <span className="text-sm font-medium">Matriz Riesgos</span>
+                <span className="text-xs text-muted-foreground">Analizar riesgos</span>
+              </Link>
             </Button>
             <Button variant="outline" className="h-20 flex flex-col">
               <span className="text-sm font-medium">Reporte</span>

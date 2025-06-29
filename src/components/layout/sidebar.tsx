@@ -1,3 +1,4 @@
+// src/components/layout/sidebar.tsx - CORREGIDO
 'use client';
 
 import Link from 'next/link';
@@ -18,42 +19,42 @@ import {
 const navigation = [
   {
     name: 'Dashboard',
-    href: '/dashboard',
+    href: '/', // ✅ Ruta corregida
     icon: LayoutDashboard,
   },
   {
     name: 'Activos',
-    href: '/dashboard/activos',
+    href: '/activos', // ✅ Ruta corregida
     icon: Database,
   },
   {
     name: 'Riesgos',
-    href: '/dashboard/riesgos',
+    href: '/riesgos', // ✅ Ruta corregida
     icon: AlertTriangle,
   },
   {
     name: 'Amenazas',
-    href: '/dashboard/amenazas',
+    href: '/amenazas', // ✅ Ruta corregida
     icon: Lock,
   },
   {
     name: 'Vulnerabilidades',
-    href: '/dashboard/vulnerabilidades',
+    href: '/vulnerabilidades', // ✅ Ruta corregida
     icon: Bug,
   },
   {
     name: 'Salvaguardas',
-    href: '/dashboard/salvaguardas',
+    href: '/salvaguardas', // ✅ Ruta corregida
     icon: ShieldCheck,
   },
   {
     name: 'CVE',
-    href: '/dashboard/cve',
+    href: '/cve', // ✅ Ruta corregida
     icon: FileSearch,
   },
   {
     name: 'Reportes',
-    href: '/dashboard/reportes',
+    href: '/reportes', // ✅ Ruta corregida
     icon: BarChart3,
   },
 ];

@@ -1,3 +1,4 @@
+// src/app/(dashboard)/activos/page.tsx - RUTAS CORREGIDAS
 'use client';
 
 import { useState } from 'react';
@@ -8,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AssetTable } from '@/components/assets/asset-table';
 import { AssetFilters } from '@/components/assets/asset-filters';
-import { BulkImportDialog } from '@/components/assets/bulk-import-dialog'; // ✅ Importar
+import { BulkImportDialog } from '@/components/assets/bulk-import-dialog';
 import { useAssets, useAssetStats } from '@/hooks/use-assets';
 import { AssetFilters as AssetFiltersType } from '@/types';
 
@@ -41,13 +42,13 @@ export default function AssetsPage() {
           </p>
         </div>
         <div className="flex items-center space-x-2">
-          <BulkImportDialog /> {/* ✅ Usar el componente */}
+          <BulkImportDialog />
           <Button variant="outline" size="sm">
             <Download className="mr-2 h-4 w-4" />
             Exportar
           </Button>
           <Button asChild>
-            <Link href="/dashboard/activos/nuevo">
+            <Link href="/activos/nuevo"> {/* ✅ Ruta corregida */}
               <Plus className="mr-2 h-4 w-4" />
               Nuevo Activo
             </Link>
@@ -55,7 +56,6 @@ export default function AssetsPage() {
         </div>
       </div>
 
-      {/* Resto del componente permanece igual... */}
       {/* Stats Cards */}
       {stats && (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

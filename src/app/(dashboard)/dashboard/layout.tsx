@@ -1,6 +1,7 @@
+// src/app/(dashboard)/layout.tsx - ACTUALIZA TU ARCHIVO EXISTENTE
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth-store';
 import { Sidebar } from '@/components/layout/sidebar';
@@ -12,14 +13,33 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, user, isHydrated } = useAuthStore(); // ✅ AGREGAR isHydrated
   const router = useRouter();
+  const [isMounted, setIsMounted] = useState(false); // ✅ NUEVA LÍNEA
 
+  // ✅ NUEVO USEEFFECT
   useEffect(() => {
-    if (!isAuthenticated) {
+    setIsMounted(true);
+  }, []);
+
+  // ✅ MODIFICAR ESTE USEEFFECT
+  useEffect(() => {
+    if (isMounted && isHydrated && !isAuthenticated) {
       router.push('/login');
     }
-  }, [isAuthenticated, router]);
+  }, [isMounted, isHydrated, isAuthenticated, router]);
+
+  // ✅ MODIFICAR ESTA CONDICIÓN
+  if (!isMounted || !isHydrated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Cargando aplicación...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated || !user) {
     return (
