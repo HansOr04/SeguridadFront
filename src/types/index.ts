@@ -119,6 +119,7 @@ export interface Threat {
   probabilidad: number;
 }
 
+
 // Asset Types
 export interface Asset {
   _id: string;
@@ -187,4 +188,44 @@ export interface AssetStats {
     _id: string;
     count: number;
   }>;
+}
+export interface DashboardKPIs {
+  totalActivos: number;
+  riesgosCriticos: number;
+  vulnerabilidadesActivas: number;
+  salvaguardasImplementadas: number;
+  tendenciaRiesgos: 'up' | 'down' | 'stable';
+  efectividadPrograma: number;
+}
+
+export interface RiskMatrixData {
+  name: string;
+  probability: number;
+  impact: number;
+  level: 'Crítico' | 'Alto' | 'Medio' | 'Bajo' | 'Muy Bajo';
+}
+
+export interface TrendData {
+  date: string;
+  riesgos: number;
+  vulnerabilidades: number;
+  salvaguardas: number;
+}
+
+export interface Activity {
+  id: string;
+  type: 'vulnerability' | 'asset' | 'risk' | 'safeguard';
+  action: 'created' | 'updated' | 'deleted' | 'mitigated';
+  title: string;
+  description: string;
+  timestamp: string;
+  user: string;
+  severity?: 'low' | 'medium' | 'high' | 'critical';
+}
+
+// Bulk Import Types
+export interface BulkImportResult {
+  successful: number;
+  failed: number;
+  errors: string[];
 }

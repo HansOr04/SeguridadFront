@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { assetService } from '@/lib/asset-service';
-import { AssetFilters, CreateAssetRequest } from '@/types';
+import { AssetFilters, CreateAssetRequest, BulkImportResult } from '@/types';
 import { toast } from 'sonner';
 
 const QUERY_KEYS = {
@@ -78,12 +78,30 @@ export function useAssetMutations() {
     },
   });
 
+  // ✅ Corregir bulkImport mutation
+  const bulkImportMutation = useMutation({
+    mutationFn: assetService.bulkImport,
+    onSuccess: (result: BulkImportResult) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.assets });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.stats });
+      toast.success(`Importación completada: ${result.successful} exitosos, ${result.failed} fallidos`);
+    },
+    onError: (error: { response?: { data?: { error?: string } } }) => {
+      toast.error(error.response?.data?.error || 'Error en la importación');
+    },
+  });
+
   return {
     create: createMutation.mutate,
     update: updateMutation.mutate,
     delete: deleteMutation.mutate,
+    // ✅ Retornar la mutación completa para permitir callbacks personalizados
+    bulkImport: (data: CreateAssetRequest[], options?: { onSuccess?: (result: BulkImportResult) => void; onError?: (error: any) => void }) => {
+      return bulkImportMutation.mutate(data, options);
+    },
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
+    isBulkImporting: bulkImportMutation.isPending,
   };
 }

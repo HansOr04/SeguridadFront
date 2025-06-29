@@ -4,7 +4,8 @@ import {
   Asset, 
   CreateAssetRequest,
   AssetFilters,
-  AssetStats 
+  AssetStats,
+  BulkImportResult // ✅ Importar el tipo
 } from '@/types';
 
 export const assetService = {
@@ -55,9 +56,9 @@ export const assetService = {
     return response.data.data!;
   },
 
-  // Importación masiva
-  async bulkImport(assets: CreateAssetRequest[]): Promise<any> {
-    const response = await api.post<ApiResponse>('/assets/bulk-import', { assets });
+  // ✅ Importación masiva - ÚNICO método
+  async bulkImport(assets: CreateAssetRequest[]): Promise<BulkImportResult> {
+    const response = await api.post<ApiResponse<BulkImportResult>>('/assets/bulk-import', { assets });
     return response.data.data!;
   },
 };

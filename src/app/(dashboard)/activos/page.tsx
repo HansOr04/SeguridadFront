@@ -1,13 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Download, Database, Upload, BarChart3 } from 'lucide-react';
+import { Plus, Download, Database, BarChart3 } from 'lucide-react';
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AssetTable } from '@/components/assets/asset-table';
 import { AssetFilters } from '@/components/assets/asset-filters';
+import { BulkImportDialog } from '@/components/assets/bulk-import-dialog'; // ✅ Importar
 import { useAssets, useAssetStats } from '@/hooks/use-assets';
 import { AssetFilters as AssetFiltersType } from '@/types';
 
@@ -40,10 +41,7 @@ export default function AssetsPage() {
           </p>
         </div>
         <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm">
-            <Upload className="mr-2 h-4 w-4" />
-            Importar
-          </Button>
+          <BulkImportDialog /> {/* ✅ Usar el componente */}
           <Button variant="outline" size="sm">
             <Download className="mr-2 h-4 w-4" />
             Exportar
@@ -57,6 +55,7 @@ export default function AssetsPage() {
         </div>
       </div>
 
+      {/* Resto del componente permanece igual... */}
       {/* Stats Cards */}
       {stats && (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
