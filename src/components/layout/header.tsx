@@ -1,3 +1,4 @@
+// src/components/layout/header.tsx - CON ESTADO DEL BACKEND
 'use client';
 
 import { Bell, User, LogOut, Settings } from 'lucide-react';
@@ -10,6 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { BackendStatus } from '@/components/backend-status';
 import { useAuth } from '@/hooks/use-auth';
 import { getRoleDisplayName } from '@/lib/utils';
 
@@ -20,7 +22,8 @@ export function Header() {
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-14 items-center justify-between px-6">
         <div className="flex items-center space-x-4">
-          <h1 className="text-lg font-semibold">Dashboard</h1>
+          <h1 className="text-lg font-semibold">SIGRISK-EC</h1>
+          <BackendStatus />
         </div>
 
         <div className="flex items-center space-x-4">

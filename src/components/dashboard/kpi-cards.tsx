@@ -1,9 +1,8 @@
-
-// 1. FIX: src/components/dashboard/kpi-cards.tsx - Corregir tipos
+// src/components/dashboard/kpi-cards.tsx - SOLO FIX DEL ERROR TYPESCRIPT
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, AlertTriangle, CheckCircle, TrendingUp } from 'lucide-react';
+import { Shield, AlertTriangle, CheckCircle, TrendingUp, Database, Wifi, WifiOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface KPIData {
@@ -16,54 +15,45 @@ export interface KPIData {
 }
 
 interface KPICardsProps {
-  data?: KPIData; // ✅ Hacer opcional
+  data?: KPIData;
   isLoading?: boolean;
 }
 
 export function KPICards({ data, isLoading }: KPICardsProps) {
-  // ✅ Proveer valores por defecto
-  const defaultData: KPIData = {
-    totalActivos: 0,
-    riesgosCriticos: 0,
-    vulnerabilidadesActivas: 0,
-    salvaguardasImplementadas: 0,
-    tendenciaRiesgos: 'stable',
-    efectividadPrograma: 0
-  };
-
-  const kpiData = data || defaultData;
+  console.log('📊 KPI Cards - Data received:', data, 'Loading:', isLoading);
 
   const cards = [
     {
       title: "Total Activos",
-      value: kpiData.totalActivos,
+      value: data?.totalActivos,
       icon: Shield,
       description: "Activos registrados en el sistema",
       color: "text-blue-600"
     },
     {
       title: "Riesgos Críticos", 
-      value: kpiData.riesgosCriticos,
+      value: data?.riesgosCriticos,
       icon: AlertTriangle,
       description: "Riesgos que requieren atención inmediata",
       color: "text-red-600"
     },
     {
       title: "Vulnerabilidades Activas",
-      value: kpiData.vulnerabilidadesActivas, 
+      value: data?.vulnerabilidadesActivas, 
       icon: AlertTriangle,
       description: "Vulnerabilidades sin mitigar",
       color: "text-orange-600"
     },
     {
       title: "Salvaguardas",
-      value: kpiData.salvaguardasImplementadas,
+      value: data?.salvaguardasImplementadas,
       icon: CheckCircle, 
       description: "Controles de seguridad activos",
       color: "text-green-600"
     }
   ];
 
+  // Estado de carga
   if (isLoading) {
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -83,20 +73,59 @@ export function KPICards({ data, isLoading }: KPICardsProps) {
     );
   }
 
+  // Estado de error/sin datos
+  if (!data) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {cards.map((card, index) => (
+          <Card key={index} className="border-red-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                {card.title}
+              </CardTitle>
+              <WifiOff className="h-4 w-4 text-red-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-600">--</div>
+              <p className="text-xs text-red-500">Error de conexión</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  // Estado con datos del backend
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      {cards.map((card, index) => (
-        <Card key={index}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
-            <card.icon className={cn("h-4 w-4", card.color)} />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{card.value.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">{card.description}</p>
-          </CardContent>
-        </Card>
-      ))}
+      {cards.map((card, index) => {
+        const hasValue = card.value !== undefined && card.value !== null;
+        
+        return (
+          <Card key={index} className={!hasValue ? "border-orange-200" : ""}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
+              <div className="flex items-center space-x-1">
+                <card.icon className={cn("h-4 w-4", card.color)} />
+                {hasValue ? (
+                  <Wifi className="h-3 w-3 text-green-500" />
+                ) : (
+                  <Database className="h-3 w-3 text-orange-500" />
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {/* FIX: Verificar que card.value existe antes de llamar toLocaleString() */}
+                {hasValue && card.value !== undefined ? card.value.toLocaleString() : 'N/D'}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {hasValue ? card.description : 'Datos no disponibles'}
+              </p>
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 }

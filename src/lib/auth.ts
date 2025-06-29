@@ -1,32 +1,46 @@
+// src/lib/auth.ts - SERVICIO DE AUTENTICACIÓN
 import api from './api';
-import { LoginRequest, RegisterRequest, AuthResponse, ApiResponse } from '@/types';
+import { LoginRequest, RegisterRequest, AuthResponse, ApiResponse, User } from '@/types';
 
 export const authService = {
-  async login(credentials: LoginRequest): Promise<AuthResponse> {
+  async login(credentials: LoginRequest): Promise<ApiResponse<AuthResponse>> {
+    console.log('🌐 Enviando petición de login...');
     const response = await api.post<ApiResponse<AuthResponse>>('/auth/login', credentials);
-    return response.data.data!;
+    console.log('🌐 Respuesta de login recibida:', response.data);
+    return response.data;
   },
 
-  async register(userData: RegisterRequest): Promise<AuthResponse> {
+  async register(userData: RegisterRequest): Promise<ApiResponse<AuthResponse>> {
+    console.log('🌐 Enviando petición de registro...');
     const response = await api.post<ApiResponse<AuthResponse>>('/auth/register', userData);
-    return response.data.data!;
+    console.log('🌐 Respuesta de registro recibida:', response.data);
+    return response.data;
   },
 
   async logout(): Promise<void> {
+    console.log('🌐 Enviando petición de logout...');
     try {
       await api.post('/auth/logout');
-    } finally {
-      // Limpiar storage independientemente del resultado
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
-      }
+      console.log('🌐 Logout exitoso en servidor');
+    } catch (error) {
+      console.error('🌐 Error en logout del servidor:', error);
+      // No lanzar error, permitir logout local
     }
   },
 
-  async getMe() {
-    const response = await api.get<ApiResponse>('/auth/me');
-    return response.data.data;
+  async refreshToken(refreshToken: string): Promise<ApiResponse<{ accessToken: string; refreshToken: string }>> {
+    console.log('🔄 Renovando tokens...');
+    const response = await api.post<ApiResponse<{ accessToken: string; refreshToken: string }>>('/auth/refresh', {
+      refreshToken
+    });
+    console.log('🔄 Tokens renovados exitosamente');
+    return response.data;
+  },
+
+  async getMe(): Promise<ApiResponse<User>> {
+    console.log('👤 Obteniendo perfil de usuario...');
+    const response = await api.get<ApiResponse<User>>('/auth/me');
+    console.log('👤 Perfil obtenido:', response.data);
+    return response.data;
   }
 };

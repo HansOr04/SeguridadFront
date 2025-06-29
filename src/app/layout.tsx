@@ -1,4 +1,5 @@
-// src/app/layout.tsx - CORREGIDO para evitar hidratación mismatch
+
+// src/app/layout.tsx - CORREGIDO
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -18,7 +19,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={inter.className} suppressHydrationWarning>
         <Providers>
           {children}
         </Providers>

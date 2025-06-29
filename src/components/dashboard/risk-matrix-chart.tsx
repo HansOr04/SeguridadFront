@@ -1,10 +1,11 @@
 // src/components/dashboard/risk-matrix-chart.tsx - CORREGIDO
 'use client';
 
+import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ResponsiveContainer, ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { AlertTriangle } from 'lucide-react';
 
-interface RiskData {
+interface RiskMatrixData {
   name: string;
   probability: number;
   impact: number;
@@ -12,89 +13,153 @@ interface RiskData {
 }
 
 interface RiskMatrixChartProps {
-  data: RiskData[] | null | undefined; // ✅ Permitir null/undefined
+  data?: RiskMatrixData[];
+  isLoading?: boolean;
 }
 
-const COLORS: Record<string, string> = {
-  'Crítico': '#ef4444',
-  'Alto': '#f97316', 
-  'Medio': '#eab308',
-  'Bajo': '#22c55e',
-  'Muy Bajo': '#6b7280'
-};
+export function RiskMatrixChart({ data, isLoading }: RiskMatrixChartProps) {
+  console.log('🎯 Risk Matrix Chart - Data received:', data, 'Loading:', isLoading);
 
-// ✅ Datos mock para fallback
-const MOCK_DATA: RiskData[] = [
-  { name: 'Malware', probability: 7, impact: 8, level: 'Alto' },
-  { name: 'Phishing', probability: 8, impact: 6, level: 'Alto' },
-  { name: 'DDoS', probability: 4, impact: 9, level: 'Medio' },
-  { name: 'Insider Threat', probability: 3, impact: 9, level: 'Medio' },
-  { name: 'Data Breach', probability: 5, impact: 10, level: 'Crítico' },
-];
+  // Colores para cada nivel de riesgo
+  const riskColors: Record<string, string> = {
+    'Crítico': '#dc2626',
+    'Alto': '#ea580c', 
+    'Medio': '#d97706',
+    'Bajo': '#65a30d',
+    'Muy Bajo': '#16a34a'
+  };
 
-export function RiskMatrixChart({ data }: RiskMatrixChartProps) {
-  // ✅ Validar y normalizar datos
-  const chartData = Array.isArray(data) && data.length > 0 ? data : MOCK_DATA;
+  // Estado de carga
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <AlertTriangle className="h-5 w-5" />
+            <span>Matriz de Riesgos</span>
+          </CardTitle>
+          <CardDescription>
+            Distribución de riesgos por probabilidad e impacto
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-64 flex items-center justify-center">
+            <div className="animate-pulse text-muted-foreground">
+              Cargando matriz de riesgos...
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Verificar que data existe y es un array - FIX PRINCIPAL
+  const validData = Array.isArray(data) ? data : [];
+  
+  // Estado sin datos
+  if (validData.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <AlertTriangle className="h-5 w-5" />
+            <span>Matriz de Riesgos</span>
+          </CardTitle>
+          <CardDescription>
+            Distribución de riesgos por probabilidad e impacto
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-64 flex items-center justify-center">
+            <div className="text-center text-muted-foreground">
+              <AlertTriangle className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p>No hay datos de riesgos disponibles</p>
+              <p className="text-sm">Los riesgos aparecerán cuando se calculen</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Tooltip personalizado
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <div className="bg-background border rounded-lg p-3 shadow-lg">
+          <p className="font-medium">{data.name}</p>
+          <p className="text-sm text-muted-foreground">
+            Probabilidad: {data.probability}/10
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Impacto: {data.impact}/10
+          </p>
+          <p className="text-sm font-medium" style={{ color: riskColors[data.level] }}>
+            Nivel: {data.level}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Matriz de Riesgos</CardTitle>
+        <CardTitle className="flex items-center space-x-2">
+          <AlertTriangle className="h-5 w-5" />
+          <span>Matriz de Riesgos</span>
+        </CardTitle>
         <CardDescription>
-          Distribución de riesgos por probabilidad e impacto
-          {!Array.isArray(data) && (
-            <span className="text-orange-600 block text-xs mt-1">
-              * Mostrando datos de ejemplo (backend no disponible)
-            </span>
-          )}
+          Distribución de {validData.length} riesgos por probabilidad e impacto
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={350}>
-          <ScatterChart data={chartData}>
+        <ResponsiveContainer width="100%" height={300}>
+          <ScatterChart
+            data={validData}
+            margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+          >
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis 
               type="number" 
               dataKey="probability" 
               name="Probabilidad"
               domain={[0, 10]}
-              label={{ value: 'Probabilidad', position: 'insideBottom', offset: -5 }}
+              tickCount={6}
             />
             <YAxis 
               type="number" 
               dataKey="impact" 
               name="Impacto"
               domain={[0, 10]}
-              label={{ value: 'Impacto', angle: -90, position: 'insideLeft' }}
+              tickCount={6}
             />
-            <Tooltip 
-              cursor={{ strokeDasharray: '3 3' }}
-              content={({ active, payload }) => {
-                if (active && payload && payload.length) {
-                  const data = payload[0].payload as RiskData;
-                  return (
-                    <div className="bg-white p-3 border rounded shadow">
-                      <p className="font-medium">{data.name}</p>
-                      <p>Probabilidad: {data.probability}</p>
-                      <p>Impacto: {data.impact}</p>
-                      <p>Nivel: <span style={{ color: COLORS[data.level] }}>{data.level}</span></p>
-                    </div>
-                  );
-                }
-                return null;
-              }}
-            />
-            {Object.keys(COLORS).map((level) => (
-              <Scatter
-                key={level}
-                name={level}
-                data={chartData.filter(item => item.level === level)}
-                fill={COLORS[level]}
-              />
-            ))}
-            <Legend />
+            <Tooltip content={<CustomTooltip />} />
+            <Scatter dataKey="impact" name="Riesgos">
+              {validData.map((entry, index) => (
+                <Cell 
+                  key={`cell-${index}`} 
+                  fill={riskColors[entry.level] || '#6b7280'} 
+                />
+              ))}
+            </Scatter>
           </ScatterChart>
         </ResponsiveContainer>
+        
+        {/* Leyenda */}
+        <div className="flex flex-wrap gap-4 mt-4 justify-center">
+          {Object.entries(riskColors).map(([level, color]) => (
+            <div key={level} className="flex items-center space-x-2">
+              <div 
+                className="w-3 h-3 rounded-full" 
+                style={{ backgroundColor: color }}
+              />
+              <span className="text-sm text-muted-foreground">{level}</span>
+            </div>
+          ))}
+        </div>
       </CardContent>
     </Card>
   );

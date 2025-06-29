@@ -1,4 +1,4 @@
-// src/components/layout/sidebar.tsx - CORREGIDO
+// src/components/layout/sidebar.tsx - RUTAS CORREGIDAS
 'use client';
 
 import Link from 'next/link';
@@ -19,42 +19,42 @@ import {
 const navigation = [
   {
     name: 'Dashboard',
-    href: '/', // ✅ Ruta corregida
+    href: '/', // Ruta para dashboard principal
     icon: LayoutDashboard,
   },
   {
     name: 'Activos',
-    href: '/activos', // ✅ Ruta corregida
+    href: '/activos',
     icon: Database,
   },
   {
     name: 'Riesgos',
-    href: '/riesgos', // ✅ Ruta corregida
+    href: '/riesgos',
     icon: AlertTriangle,
   },
   {
     name: 'Amenazas',
-    href: '/amenazas', // ✅ Ruta corregida
+    href: '/amenazas',
     icon: Lock,
   },
   {
     name: 'Vulnerabilidades',
-    href: '/vulnerabilidades', // ✅ Ruta corregida
+    href: '/vulnerabilidades',
     icon: Bug,
   },
   {
     name: 'Salvaguardas',
-    href: '/salvaguardas', // ✅ Ruta corregida
+    href: '/salvaguardas',
     icon: ShieldCheck,
   },
   {
     name: 'CVE',
-    href: '/cve', // ✅ Ruta corregida
+    href: '/cve',
     icon: FileSearch,
   },
   {
     name: 'Reportes',
-    href: '/reportes', // ✅ Ruta corregida
+    href: '/reportes',
     icon: BarChart3,
   },
 ];
@@ -65,6 +65,21 @@ interface SidebarProps {
 
 export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
+
+  // Función para determinar si una ruta está activa
+  const isRouteActive = (href: string) => {
+    if (href === '/') {
+      // Para dashboard, solo activo si está exactamente en "/" o no está en ninguna subruta
+      return pathname === '/' || (!pathname.startsWith('/activos') && 
+                                  !pathname.startsWith('/riesgos') && 
+                                  !pathname.startsWith('/amenazas') && 
+                                  !pathname.startsWith('/vulnerabilidades') && 
+                                  !pathname.startsWith('/salvaguardas') && 
+                                  !pathname.startsWith('/cve') && 
+                                  !pathname.startsWith('/reportes'));
+    }
+    return pathname.startsWith(href);
+  };
 
   return (
     <div className={cn('pb-12 w-64', className)}>
@@ -81,7 +96,7 @@ export function Sidebar({ className }: SidebarProps) {
                 href={item.href}
                 className={cn(
                   'flex items-center rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors',
-                  pathname === item.href
+                  isRouteActive(item.href)
                     ? 'bg-accent text-accent-foreground'
                     : 'text-muted-foreground'
                 )}

@@ -1,4 +1,4 @@
-// src/app/(dashboard)/page.tsx - TU ARCHIVO EXISTENTE CON FIX DE HIDRATACIÓN
+// src/app/(dashboard)/page.tsx - DASHBOARD PRINCIPAL CORREGIDO
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -24,11 +24,11 @@ import {
 
 export default function DashboardPage() {
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d'>('30d');
-  const [isMounted, setIsMounted] = useState(false); // ✅ Agregado para hidratación
+  const [isMounted, setIsMounted] = useState(false);
 
-  // ✅ Marcar como montado en el cliente
   useEffect(() => {
     setIsMounted(true);
+    console.log('📊 Dashboard mounted');
   }, []);
 
   // Hooks para datos
@@ -38,10 +38,11 @@ export default function DashboardPage() {
   const { data: activities, isLoading: activitiesLoading } = useActivityFeed(10);
 
   const handleRefresh = () => {
+    console.log('🔄 Refreshing dashboard data');
     refetchKPIs();
   };
 
-  // ✅ No renderizar hasta que esté montado (evita hidratación mismatch)
+  // No renderizar hasta que esté montado
   if (!isMounted) {
     return (
       <div className="space-y-6">
@@ -54,7 +55,7 @@ export default function DashboardPage() {
           </div>
           <Button variant="outline" disabled>
             <RefreshCw className="mr-2 h-4 w-4" />
-            Actualizar
+            Cargando...
           </Button>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -169,9 +170,11 @@ export default function DashboardPage() {
                 <span className="text-xs text-muted-foreground">Registrar activo</span>
               </Link>
             </Button>
-            <Button variant="outline" className="h-20 flex flex-col">
-              <span className="text-sm font-medium">Escanear</span>
-              <span className="text-xs text-muted-foreground">Buscar vulnerabilidades</span>
+            <Button variant="outline" className="h-20 flex flex-col" asChild>
+              <Link href="/vulnerabilidades/nueva">
+                <span className="text-sm font-medium">Nueva Vulnerabilidad</span>
+                <span className="text-xs text-muted-foreground">Registrar vulnerabilidad</span>
+              </Link>
             </Button>
             <Button variant="outline" className="h-20 flex flex-col" asChild>
               <Link href="/riesgos">
@@ -179,9 +182,11 @@ export default function DashboardPage() {
                 <span className="text-xs text-muted-foreground">Analizar riesgos</span>
               </Link>
             </Button>
-            <Button variant="outline" className="h-20 flex flex-col">
-              <span className="text-sm font-medium">Reporte</span>
-              <span className="text-xs text-muted-foreground">Generar informe</span>
+            <Button variant="outline" className="h-20 flex flex-col" asChild>
+              <Link href="/activos">
+                <span className="text-sm font-medium">Gestionar Activos</span>
+                <span className="text-xs text-muted-foreground">Ver inventario</span>
+              </Link>
             </Button>
           </div>
         </CardContent>

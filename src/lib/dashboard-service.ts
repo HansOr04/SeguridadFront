@@ -1,3 +1,4 @@
+// src/lib/dashboard-service.ts - TYPESCRIPT FIXES
 import api from './api';
 import { ApiResponse } from '@/types';
 
@@ -35,141 +36,109 @@ interface Activity {
   severity?: 'low' | 'medium' | 'high' | 'critical';
 }
 
+// Tipos para las respuestas del backend
+interface AssetStatsResponse {
+  general?: {
+    totalActivos?: number;
+  };
+}
+
+interface RiskStatsResponse {
+  riesgosCriticos?: number;
+  tendencia?: 'up' | 'down' | 'stable';
+}
+
+interface VulnerabilityStatsResponse {
+  vulnerabilidadesActivas?: number;
+}
+
+interface SafeguardStatsResponse {
+  implementedSafeguards?: number;
+  averageEffectiveness?: number;
+}
+
 export const dashboardService = {
-  // Obtener KPIs principales
+  // Obtener KPIs principales - SOLO BACKEND
   async getKPIs(): Promise<DashboardKPIs> {
+    console.log('📊 Fetching KPIs from backend...');
+    
     try {
-      // Combinar múltiples endpoints para construir KPIs
+      // Intentar combinar múltiples endpoints para construir KPIs
       const [assetsResponse, risksResponse, vulnResponse, safeguardsResponse] = await Promise.all([
-        api.get<ApiResponse>('/assets/stats'),
-        api.get<ApiResponse>('/risks/dashboard'),
-        api.get<ApiResponse>('/vulnerabilities/dashboard'),
-        api.get<ApiResponse>('/safeguards/dashboard')
+        api.get<ApiResponse<AssetStatsResponse>>('/assets/stats'),
+        api.get<ApiResponse<RiskStatsResponse>>('/risks/dashboard'), 
+        api.get<ApiResponse<VulnerabilityStatsResponse>>('/vulnerabilities/dashboard'),
+        api.get<ApiResponse<SafeguardStatsResponse>>('/safeguards/dashboard')
       ]);
 
-      // ✅ Usar any con tipo explicito para evitar errores
-      const assetStats: any = assetsResponse.data.data || {};
-      const riskStats: any = risksResponse.data.data || {};
-      const vulnStats: any = vulnResponse.data.data || {};
-      const safeguardStats: any = safeguardsResponse.data.data || {};
+      const assetStats = assetsResponse.data.data || {};
+      const riskStats = risksResponse.data.data || {};
+      const vulnStats = vulnResponse.data.data || {};
+      const safeguardStats = safeguardsResponse.data.data || {};
 
-      return {
+      const kpis = {
         totalActivos: assetStats.general?.totalActivos || 0,
         riesgosCriticos: riskStats.riesgosCriticos || 0,
         vulnerabilidadesActivas: vulnStats.vulnerabilidadesActivas || 0,
         salvaguardasImplementadas: safeguardStats.implementedSafeguards || 0,
-        tendenciaRiesgos: 'stable', // TODO: Calcular tendencia
+        tendenciaRiesgos: riskStats.tendencia || 'stable' as const,
         efectividadPrograma: safeguardStats.averageEffectiveness || 0
       };
+
+      console.log('✅ KPIs fetched successfully:', kpis);
+      return kpis;
     } catch (error) {
-      // Fallback con datos mock si falla la API
-      console.warn('Usando datos mock para KPIs:', error);
-      return {
-        totalActivos: 45,
-        riesgosCriticos: 8,
-        vulnerabilidadesActivas: 23,
-        salvaguardasImplementadas: 12,
-        tendenciaRiesgos: 'down',
-        efectividadPrograma: 78
-      };
+      console.error('❌ Error fetching KPIs from backend:', error);
+      // No devolver datos mock - lanzar error para mostrar estado de error
+      throw new Error('Error al cargar KPIs. Verifique que el backend esté disponible.');
     }
   },
 
-  // Obtener datos para matriz de riesgos
+  // Obtener datos para matriz de riesgos - SOLO BACKEND
   async getRiskMatrix(): Promise<RiskMatrixData[]> {
+    console.log('🎯 Fetching risk matrix from backend...');
+    
     try {
       const response = await api.get<ApiResponse<RiskMatrixData[]>>('/risks/matrix');
-      return response.data.data || [];
+      const data = response.data.data || [];
+      console.log('✅ Risk matrix fetched successfully:', data);
+      return data;
     } catch (error) {
-      console.warn('Usando datos mock para matriz de riesgos:', error);
-      return [
-        { name: 'Malware', probability: 7, impact: 8, level: 'Alto' },
-        { name: 'Phishing', probability: 8, impact: 6, level: 'Alto' },
-        { name: 'DDoS', probability: 4, impact: 9, level: 'Medio' },
-        { name: 'Insider Threat', probability: 3, impact: 9, level: 'Medio' },
-        { name: 'Data Breach', probability: 5, impact: 10, level: 'Crítico' },
-      ];
+      console.error('❌ Error fetching risk matrix:', error);
+      // No datos mock - devolver array vacío o lanzar error
+      throw new Error('Error al cargar matriz de riesgos. Verifique la conexión con el backend.');
     }
   },
 
-  // Obtener datos de tendencias
+  // Obtener datos de tendencias - SOLO BACKEND
   async getTrends(timeRange: '7d' | '30d' | '90d'): Promise<TrendData[]> {
+    console.log(`📈 Fetching trends for ${timeRange} from backend...`);
+    
     try {
       const response = await api.get<ApiResponse<TrendData[]>>(`/dashboard/trends?range=${timeRange}`);
-      return response.data.data || [];
-    } catch (error) {
-      console.warn('Usando datos mock para tendencias:', error);
-      
-      // Generar datos mock basados en el rango
-      const days = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90;
-      const data: TrendData[] = [];
-      
-      for (let i = days - 1; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        
-        data.push({
-          date: date.toISOString().split('T')[0],
-          riesgos: Math.floor(Math.random() * 20) + 10,
-          vulnerabilidades: Math.floor(Math.random() * 30) + 15,
-          salvaguardas: Math.floor(Math.random() * 15) + 5,
-        });
-      }
-      
+      const data = response.data.data || [];
+      console.log('✅ Trends fetched successfully:', data);
       return data;
+    } catch (error) {
+      console.error('❌ Error fetching trends:', error);
+      // No datos mock - devolver array vacío
+      throw new Error('Error al cargar tendencias. Verifique la conexión con el backend.');
     }
   },
 
-  // Obtener feed de actividades
+  // Obtener feed de actividades - SOLO BACKEND
   async getActivities(limit: number = 10): Promise<Activity[]> {
+    console.log(`📝 Fetching ${limit} activities from backend...`);
+    
     try {
       const response = await api.get<ApiResponse<Activity[]>>(`/dashboard/activities?limit=${limit}`);
-      return response.data.data || [];
+      const data = response.data.data || [];
+      console.log('✅ Activities fetched successfully:', data);
+      return data;
     } catch (error) {
-      console.warn('Usando datos mock para actividades:', error);
-      
-      const mockActivities: Activity[] = [
-        {
-          id: '1',
-          type: 'vulnerability',
-          action: 'created',
-          title: 'Nueva vulnerabilidad crítica detectada',
-          description: 'VULN-2024-001: Vulnerabilidad en Apache Struts',
-          timestamp: new Date(Date.now() - 300000).toISOString(), // 5 min ago
-          user: 'Sistema Automático',
-          severity: 'critical'
-        },
-        {
-          id: '2',
-          type: 'asset',
-          action: 'created',
-          title: 'Nuevo servidor agregado',
-          description: 'SRV-WEB-003: Servidor web de producción',
-          timestamp: new Date(Date.now() - 900000).toISOString(), // 15 min ago
-          user: 'Juan Pérez'
-        },
-        {
-          id: '3',
-          type: 'safeguard',
-          action: 'updated',
-          title: 'Salvaguarda implementada',
-          description: 'SAL-FW-001: Configuración de firewall actualizada',
-          timestamp: new Date(Date.now() - 1800000).toISOString(), // 30 min ago
-          user: 'María González'
-        },
-        {
-          id: '4',
-          type: 'vulnerability',
-          action: 'mitigated',
-          title: 'Vulnerabilidad mitigada',
-          description: 'VULN-2024-002: Parcheada vulnerabilidad en WordPress',
-          timestamp: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-          user: 'Carlos López',
-          severity: 'high'
-        }
-      ];
-
-      return mockActivities.slice(0, limit);
+      console.error('❌ Error fetching activities:', error);
+      // No datos mock - devolver array vacío
+      throw new Error('Error al cargar actividades. Verifique la conexión con el backend.');
     }
   }
 };
