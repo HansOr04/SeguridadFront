@@ -1,15 +1,53 @@
-// src/hooks/use-dashboard.ts - HOOKS SIN DATOS MOCK
+// src/hooks/use-dashboard.ts - HOOKS OPTIMIZADOS
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { dashboardService } from '@/lib/dashboard-service';
 import { useErrorHandler } from './use-error-handler';
+import { useCallback, useMemo } from 'react';
 
 const QUERY_KEYS = {
   kpis: ['dashboard', 'kpis'],
   riskMatrix: ['dashboard', 'risk-matrix'],
   trends: (timeRange: string) => ['dashboard', 'trends', timeRange],
-  activities: ['dashboard', 'activities'],
+  activities: (limit: number) => ['dashboard', 'activities', limit],
+  health: ['dashboard', 'health'],
+};
+
+// ✅ CONFIGURACIÓN OPTIMIZADA DE QUERIES
+const QUERY_CONFIG = {
+  // Configuración para KPIs (datos críticos)
+  kpis: {
+    staleTime: 2 * 60 * 1000, // 2 minutos - datos frescos
+    cacheTime: 10 * 60 * 1000, // 10 minutos en cache
+    refetchInterval: 5 * 60 * 1000, // Refetch cada 5 minutos
+    retry: 2,
+    retryDelay: (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 10000),
+  },
+  
+  // Configuración para matriz de riesgos (menos crítico)
+  riskMatrix: {
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    cacheTime: 15 * 60 * 1000, // 15 minutos en cache
+    refetchInterval: 10 * 60 * 1000, // Refetch cada 10 minutos
+    retry: 1,
+  },
+  
+  // Configuración para tendencias (datos históricos)
+  trends: {
+    staleTime: 10 * 60 * 1000, // 10 minutos
+    cacheTime: 30 * 60 * 1000, // 30 minutos en cache
+    refetchInterval: undefined, // ✅ CORREGIDO: undefined en lugar de false
+    retry: 1,
+  },
+  
+  // Configuración para actividades (datos dinámicos)
+  activities: {
+    staleTime: 1 * 60 * 1000, // 1 minuto
+    cacheTime: 5 * 60 * 1000, // 5 minutos en cache
+    refetchInterval: 2 * 60 * 1000, // Refetch cada 2 minutos
+    retry: 1,
+  }
 };
 
 export function useDashboardKPIs() {
@@ -20,21 +58,25 @@ export function useDashboardKPIs() {
     queryFn: async () => {
       console.log('🔄 Fetching dashboard KPIs...');
       try {
-        return await dashboardService.getKPIs();
+        const data = await dashboardService.getKPIs();
+        console.log('✅ KPIs loaded successfully:', data);
+        return data;
       } catch (error) {
+        console.error('❌ Error loading KPIs:', error);
         handleApiError(error, 'Dashboard KPIs');
-        throw error; // Re-throw para que React Query maneje el estado de error
+        
+        // Devolver datos por defecto en lugar de lanzar error
+        return {
+          totalActivos: 0,
+          riesgosCriticos: 0,
+          vulnerabilidadesActivas: 0,
+          salvaguardasImplementadas: 0,
+          tendenciaRiesgos: 'stable' as const,
+          efectividadPrograma: 0
+        };
       }
     },
-    refetchInterval: 30000, // Refetch cada 30 segundos
-    retry: (failureCount, error: any) => {
-      // Reintentar hasta 3 veces, pero no para errores 404 o 401
-      if (error?.response?.status === 404 || error?.response?.status === 401) {
-        return false;
-      }
-      return failureCount < 3;
-    },
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Backoff exponencial
+    ...QUERY_CONFIG.kpis,
   });
 }
 
@@ -46,15 +88,16 @@ export function useRiskMatrix() {
     queryFn: async () => {
       console.log('🔄 Fetching risk matrix...');
       try {
-        return await dashboardService.getRiskMatrix();
+        const data = await dashboardService.getRiskMatrix();
+        console.log('✅ Risk matrix loaded:', data.length, 'items');
+        return data;
       } catch (error) {
+        console.error('❌ Error loading risk matrix:', error);
         handleApiError(error, 'Matriz de Riesgos');
-        // Para matriz de riesgos, devolver array vacío en caso de error
-        return [];
+        return []; // Devolver array vacío para que el componente funcione
       }
     },
-    refetchInterval: 60000, // Refetch cada minuto
-    retry: 2,
+    ...QUERY_CONFIG.riskMatrix,
   });
 }
 
@@ -66,15 +109,16 @@ export function useTrendData(timeRange: '7d' | '30d' | '90d' = '30d') {
     queryFn: async () => {
       console.log(`🔄 Fetching trends for ${timeRange}...`);
       try {
-        return await dashboardService.getTrends(timeRange);
+        const data = await dashboardService.getTrends(timeRange);
+        console.log(`✅ Trends loaded for ${timeRange}:`, data.length, 'data points');
+        return data;
       } catch (error) {
+        console.error(`❌ Error loading trends for ${timeRange}:`, error);
         handleApiError(error, 'Tendencias');
-        // Para tendencias, devolver array vacío en caso de error
-        return [];
+        return []; // Devolver array vacío
       }
     },
-    refetchInterval: 300000, // Refetch cada 5 minutos
-    retry: 2,
+    ...QUERY_CONFIG.trends,
   });
 }
 
@@ -82,18 +126,50 @@ export function useActivityFeed(limit: number = 10) {
   const { handleApiError } = useErrorHandler();
 
   return useQuery({
-    queryKey: [...QUERY_KEYS.activities, limit],
+    queryKey: QUERY_KEYS.activities(limit),
     queryFn: async () => {
       console.log(`🔄 Fetching ${limit} activities...`);
       try {
-        return await dashboardService.getActivities(limit);
+        const data = await dashboardService.getActivities(limit);
+        console.log('✅ Activities loaded:', data.length, 'activities');
+        return data;
       } catch (error) {
+        console.error('❌ Error loading activities:', error);
         handleApiError(error, 'Feed de Actividades');
-        // Para actividades, devolver array vacío en caso de error
-        return [];
+        return []; // Devolver array vacío
       }
     },
-    refetchInterval: 15000, // Refetch cada 15 segundos
-    retry: 2,
+    ...QUERY_CONFIG.activities,
   });
+}
+
+// ✅ NUEVO: Hook personalizado para refetch inteligente
+export function useDashboardRefresh() {
+  const queryClient = useQueryClient();
+
+  const refreshAll = useCallback(async () => {
+    console.log('🔄 Refreshing all dashboard data...');
+    
+    // Invalidar todas las queries del dashboard
+    await queryClient.invalidateQueries({ 
+      queryKey: ['dashboard'],
+      refetchType: 'active' // Solo refetch queries activas
+    });
+    
+    console.log('✅ Dashboard refresh completed');
+  }, [queryClient]);
+
+  const refreshKPIs = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.kpis });
+  }, [queryClient]);
+
+  const refreshRiskMatrix = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.riskMatrix });
+  }, [queryClient]);
+
+  return {
+    refreshAll,
+    refreshKPIs,
+    refreshRiskMatrix,
+  };
 }

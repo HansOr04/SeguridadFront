@@ -1,12 +1,12 @@
-// src/app/layout-wrapper.tsx - DISEÑO CORREGIDO
+// src/app/layout-wrapper.tsx - OPTIMIZADO
 'use client';
 
 import { usePathname } from 'next/navigation';
 import { useAuthStore } from '@/store/auth-store';
 import { Header } from '@/components/layout/header';
 import { Sidebar } from '@/components/layout/sidebar';
-import { useEffect, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { useEffect, useState, useMemo } from 'react';
+import { Loader2, WifiOff } from 'lucide-react';
 
 interface LayoutWrapperProps {
   children: React.ReactNode;
@@ -21,27 +21,27 @@ export function LayoutWrapper({ children }: LayoutWrapperProps) {
     setIsMounted(true);
   }, []);
 
-  // Rutas que no necesitan sidebar (auth pages)
-  const authRoutes = ['/login', '/register'];
-  const isAuthRoute = authRoutes.includes(pathname);
-  
-  // Rutas que necesitan autenticación para mostrar sidebar
-  const protectedRoutes = [
-    '/dashboard',
-    '/activos',
-    '/vulnerabilidades', 
-    '/riesgos',
-    '/amenazas',
-    '/salvaguardas',
-    '/cve',
-    '/reportes'
-  ];
-  
-  const isProtectedRoute = protectedRoutes.some(route => 
-    pathname.startsWith(route)
-  );
+  // ✅ MEMOIZAR rutas para evitar recálculos
+  const routeConfig = useMemo(() => {
+    const authRoutes = ['/login', '/register'];
+    const protectedRoutes = [
+      '/dashboard',
+      '/activos',
+      '/vulnerabilidades', 
+      '/riesgos',
+      '/amenazas',
+      '/salvaguardas',
+      '/cve',
+      '/reportes'
+    ];
+    
+    const isAuthRoute = authRoutes.includes(pathname);
+    const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
+    
+    return { isAuthRoute, isProtectedRoute };
+  }, [pathname]);
 
-  // Mostrar loading hasta que esté montado e hidratado
+  // ✅ Loading optimizado - mostrar solo cuando es necesario
   if (!isMounted || !isHydrated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -53,12 +53,12 @@ export function LayoutWrapper({ children }: LayoutWrapperProps) {
     );
   }
 
-  // Si es ruta de auth, usar layout de autenticación CORREGIDO
-  if (isAuthRoute) {
+  // ✅ LAYOUT DE AUTENTICACIÓN optimizado
+  if (routeConfig.isAuthRoute) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-100">
         <div className="min-h-screen flex">
-          {/* Panel izquierdo - Branding */}
+          {/* Panel izquierdo - Branding (solo desktop) */}
           <div className="hidden lg:flex lg:w-1/2 lg:flex-col lg:justify-center lg:px-12 lg:py-12 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white">
             <div className="max-w-md mx-auto">
               {/* Logo y título */}
@@ -132,13 +132,14 @@ export function LayoutWrapper({ children }: LayoutWrapperProps) {
     );
   }
 
-  // Si es ruta protegida y está autenticado, usar layout con sidebar
-  if (isProtectedRoute && isAuthenticated) {
+  // ✅ LAYOUT PROTEGIDO optimizado
+  if (routeConfig.isProtectedRoute && isAuthenticated) {
     return (
       <div className="flex h-screen bg-background">
         <Sidebar />
         <div className="flex flex-1 flex-col overflow-hidden">
           <Header />
+          
           <main className="flex-1 overflow-x-hidden overflow-y-auto bg-background">
             <div className="container mx-auto px-6 py-8">
               {children}
@@ -149,11 +150,10 @@ export function LayoutWrapper({ children }: LayoutWrapperProps) {
     );
   }
 
-  // Para rutas no protegidas o mientras carga autenticación
+  // ✅ LAYOUT POR DEFECTO para rutas no protegidas
   return (
     <div className="min-h-screen bg-background">
       {children}
     </div>
   );
 }
-

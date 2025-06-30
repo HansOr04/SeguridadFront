@@ -1,4 +1,4 @@
-// src/app/page.tsx - SIMPLIFICADO
+// src/app/page.tsx - CORREGIDO
 'use client';
 
 import { useEffect } from 'react';
@@ -12,6 +12,7 @@ export default function HomePage() {
   useEffect(() => {
     if (isHydrated) {
       if (isAuthenticated) {
+        // ✅ CORREGIDO: Redirigir a /dashboard
         router.replace('/dashboard');
       } else {
         router.replace('/login');
@@ -19,6 +20,6 @@ export default function HomePage() {
     }
   }, [isHydrated, isAuthenticated, router]);
 
-  // Componente mínimo para evitar hidratación
+  // Componente mínimo para evitar problemas de hidratación
   return null;
 }
